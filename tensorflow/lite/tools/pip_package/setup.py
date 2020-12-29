@@ -67,11 +67,22 @@ for name in [
     MAKE_CROSS_OPTIONS.append('%s=%s' % (name, value))
 
 
+# Check if it's running inside docker
+# https://stackoverflow.com/a/48710609
+def is_docker():
+    path = '/proc/self/cgroup'
+    return (
+        os.path.exists('/.dockerenv') or
+        os.path.isfile(path) and any('docker' in line for line in open(path))
+    )
+
 # Check physical memory and if we are on a reasonable non small SOC machine
 # with more than 4GB, use all the CPUs, otherwise only 1.
 def get_build_cpus():
   physical_bytes = os.sysconf('SC_PAGESIZE') * os.sysconf('SC_PHYS_PAGES')
-  if physical_bytes < (1 << 30) * 4:
+  if is_docker():
+    return multiprocessing.cpu_count()
+  elif physical_bytes < (1 << 30) * 4:
     return 1
   else:
     return multiprocessing.cpu_count()
@@ -100,7 +111,7 @@ def make():
   """Invoke make to build tflite C++ sources.
 
   Build dependencies:
-     apt-get install swig libjpeg-dev zlib1g-dev python3-dev python3-nump
+     apt-get install swig libjpeg-dev zlib1g-dev python3-dev python3-numpy
   """
   subprocess.check_call(make_args(quiet=False))
 
@@ -160,9 +171,13 @@ def get_pybind_include():
       pass
   return tmp_include_dirs
 
-
 LIB_TFLITE = 'tensorflow-lite'
 LIB_TFLITE_DIR = make_output('libdir')
+
+if os.uname()[-1] == 'armv6l':
+  ext_libraries = [LIB_TFLITE, 'atomic']
+else:
+  ext_libraries = [LIB_TFLITE]
 
 ext = Extension(
     name='%s._pywrap_tensorflow_interpreter_wrapper' % PACKAGE_NAME,
@@ -184,7 +199,7 @@ ext = Extension(
         os.path.join(DOWNLOADS_DIR, 'absl'),
         pybind11.get_include()
     ],
-    libraries=[LIB_TFLITE],
+    libraries=ext_libraries,
     library_dirs=[LIB_TFLITE_DIR])
 
 setup(
