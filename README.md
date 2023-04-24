@@ -1,3 +1,10 @@
+# <attention>
+I should have removed the other branches, but I haven't and now I'm not going to remove those branches because I don't want to risk breaking someone's else code, so I will explain it here:        
+### This fork is all about the branch https://github.com/ricardodeazambuja/tensorflow/tree/rpi0     
+### that was needed here https://github.com/ricardodeazambuja/libedgetpu-rpi0/releases/tag/rpi0_tflite_edgetpu     
+### to allow this https://github.com/ricardodeazambuja/Maple-Syrup-Pi-Camera
+# </attention>
+
 <div align="center">
   <img src="https://www.tensorflow.org/images/tf_logo_social.png">
 </div>
